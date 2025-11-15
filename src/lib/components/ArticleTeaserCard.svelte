@@ -1,20 +1,12 @@
 <script lang="ts">
+	import { formatFrenchDate } from '$lib/utils'
+
 	export let category = ''
 	export let image = ''
 	export let date = ''
 	export let title = ''
 	export let summary = ''
 	export let url = '#'
-
-	const formatDate = (value: string) => {
-		const parsed = new Date(value)
-
-		if (Number.isNaN(parsed.getTime())) {
-			return value
-		}
-
-		return new Intl.DateTimeFormat('fr-FR').format(parsed)
-	}
 </script>
 
 <a class="card" href={url} target="_blank" title="Lire l'article {title}" rel="noopener noreferrer">
@@ -23,7 +15,7 @@
 	</figure>
 	<div class="content">
 		<span class="category">{category}</span>
-		<time class="date" datetime={date}>{formatDate(date)}</time>
+		<time class="date" datetime={date}>{formatFrenchDate(date)}</time>
 		<h3 class="title">{title}</h3>
 		<p class="summary">{summary}</p>
 		<span class="cta">Lire l'article</span>
@@ -38,7 +30,7 @@
 		border-radius: 18px;
 		overflow: hidden;
 		text-decoration: none;
-		background: #ffffff;
+		background: var(--white);
 		color: inherit;
 		transition:
 			transform 200ms ease,
@@ -94,7 +86,7 @@
 
 	.date {
 		font-size: 0.85rem;
-		color: #6b6b6b;
+		color: var(--text-secondary);
 		line-height: 1.2;
 		display: block;
 	}
@@ -108,6 +100,7 @@
 		display: -webkit-box;
 		-webkit-box-orient: vertical;
 		-webkit-line-clamp: 2;
+		line-clamp: 2;
 		overflow: hidden;
 		text-overflow: ellipsis;
 	}
@@ -120,6 +113,7 @@
 		display: -webkit-box;
 		-webkit-box-orient: vertical;
 		-webkit-line-clamp: 3;
+		line-clamp: 3;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		align-self: start;
@@ -128,8 +122,8 @@
 	.cta {
 		padding: 0.55rem 1.15rem;
 		border-radius: 999px;
-		background: var(--carousel-accent, #ff9416);
-		color: #ffffff;
+		background: var(--carousel-accent, var(--brand));
+		color: var(--white);
 		font-weight: 600;
 		font-size: 0.875rem;
 		line-height: 1;
@@ -141,7 +135,7 @@
 
 	.card:hover .cta,
 	.card:focus-visible .cta {
-		background: #e68512;
+		background: var(--btn-active-bg);
 	}
 
 	@media (max-width: 768px) {

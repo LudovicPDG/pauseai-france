@@ -21,7 +21,9 @@
 </script>
 
 <Banner visible={true}>
-	Pause IA recrute un·e directeur·rice executif·ve ! <a href="/directeur-france">Postulez ici</a>.
+	Compte-rendu du colloque au Sénat disponible. <a href="/senat2025"
+		>Consultez nos recommandations</a
+	>.
 </Banner>
 
 <!-- probably have to change nav colors and classes to respond to banner presence instead of route -->

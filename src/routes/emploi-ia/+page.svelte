@@ -5,25 +5,9 @@
 	import EmploiAvisForm from '$components/EmploiAvisForm.svelte'
 	import UnderlinedTitle from '$components/UnderlinedTitle.svelte'
 	import A from '$components/custom/a.svelte'
+	import type { Testimonial, ArticleShowcaseItem } from '$lib/types'
 
 	export let data: PageData
-
-	interface Testimonial {
-		name: string | null
-		age: number | null
-		job: string
-		date: string
-		testimony: string
-	}
-
-	interface ArticleShowcaseItem {
-		category: string
-		image: string
-		date: string
-		title: string
-		summary: string
-		url: string
-	}
 
 	interface PageData {
 		testimonials: Testimonial[]
@@ -35,10 +19,18 @@
 	let articleShowcaseItems = data.articleShowcaseItems
 
 	// Sort testimonials by date descending (most recent first)
-	testimonials.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+	testimonials.sort((a, b) => {
+		const dateA = a.date ? new Date(a.date).getTime() : 0
+		const dateB = b.date ? new Date(b.date).getTime() : 0
+		return dateB - dateA
+	})
 
 	// Sort articleShowcaseItems by date descending
-	articleShowcaseItems.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+	articleShowcaseItems.sort((a, b) => {
+		const dateA = a.date ? new Date(a.date).getTime() : 0
+		const dateB = b.date ? new Date(b.date).getTime() : 0
+		return dateB - dateA
+	})
 
 	// Set default image for articleShowcaseItems if undefined
 	articleShowcaseItems = articleShowcaseItems.map((item) => ({

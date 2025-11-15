@@ -1,9 +1,10 @@
 import { json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 import { Client } from '@notionhq/client'
+import type { CreatePageParameters } from '@notionhq/client'
 
 const notion = new Client({
-	auth: process.env.NOTION_TOKEN
+	auth: process.env.NOTION_TOKEN as string
 })
 
 export const POST: RequestHandler = async ({ request }) => {
@@ -16,11 +17,20 @@ export const POST: RequestHandler = async ({ request }) => {
 			!data.age ||
 			!data.statutProfessionnel ||
 			!data.secteurActivite ||
-			!data.veutPlusQuestions ||
-			!data.secteurActivite ||
-			!data.email
+			!data.veutPlusQuestions
 		) {
 			return json({ error: 'Champs requis manquants' }, { status: 400 })
+		}
+
+		// Validate email format (simple check for @ symbol)
+		if (typeof data.email !== 'string' || !data.email.includes('@')) {
+			return json({ error: "Format d'email invalide" }, { status: 400 })
+		}
+
+		// Validate age range
+		const age = Number(data.age)
+		if (isNaN(age) || age < 1 || age > 120) {
+			return json({ error: "L'âge doit être entre 1 et 120" }, { status: 400 })
 		}
 
 		if (Array.isArray(data.objectifsCellule)) {
@@ -41,7 +51,7 @@ export const POST: RequestHandler = async ({ request }) => {
 				.join('\n\n')
 		}
 
-		const properties: any = {
+		const properties: CreatePageParameters['properties'] = {
 			Prenom: {
 				title: [
 					{
@@ -150,12 +160,16 @@ export const POST: RequestHandler = async ({ request }) => {
 		}
 
 		const page = await notion.pages.create({
-			parent: { data_source_id: process.env.TESTIMONIALS_ID || '' },
+			parent: { data_source_id: process.env.TESTIMONIALS_ID as string },
 			properties
 		})
 
 		return json({ success: true })
-	} catch (error) {
+	} catch (err) {
+		console.error('Error creating Notion entry:', {
+			error: err instanceof Error ? err.message : String(err),
+			timestamp: new Date().toISOString()
+		})
 		return json({ error: 'Erreur serveur' }, { status: 500 })
 	}
 }

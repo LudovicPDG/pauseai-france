@@ -27,7 +27,6 @@
 	export let showArrows = true
 	export let showDots = true
 	export let maxVisibleDots = 7
-	export let href: string | null = null
 
 	const select = (index: number) => {
 		dispatch('select', { index })
@@ -48,25 +47,58 @@
 
 		const result: DotOrEllipsis[] = []
 		const total = items.length
-		const half = Math.floor((maxVisibleDots - 2) / 2) // -2 for first and last
 
+		// Always show first dot
 		result.push({ type: 'dot', index: 0, item: items[0] })
 
-		let start = Math.max(1, current - half)
-		let end = Math.min(total - 2, current + half)
+		// Calculate how many middle dots we can show
+		// maxVisibleDots = first + [ellipsis?] + middle dots + [ellipsis?] + last
+		// We want to maintain a consistent count, so we need to be strategic
+		const middleSlots = maxVisibleDots - 2 // Reserve space for first and last
+		const needsEllipsis = total > maxVisibleDots
 
-		if (start > 1) {
-			result.push({ type: 'ellipsis' })
+		if (needsEllipsis) {
+			// Calculate range of visible dots around current position
+			const visibleMiddleDots = middleSlots - 2 // Reserve space for ellipses
+			const half = Math.floor(visibleMiddleDots / 2)
+
+			let start = Math.max(1, Math.min(current - half, total - 1 - visibleMiddleDots))
+			let end = Math.min(total - 2, start + visibleMiddleDots - 1)
+
+			// Adjust start if we're at the end
+			if (end - start < visibleMiddleDots - 1) {
+				start = Math.max(1, end - visibleMiddleDots + 1)
+			}
+
+			// Show left ellipsis if there are hidden dots
+			if (start > 1) {
+				result.push({ type: 'ellipsis' })
+			} else if (start === 1) {
+				// Show the second dot instead of ellipsis to maintain count
+				result.push({ type: 'dot', index: 1, item: items[1] })
+				start = 2
+			}
+
+			// Show middle dots
+			for (let i = start; i <= end; i++) {
+				result.push({ type: 'dot', index: i, item: items[i] })
+			}
+
+			// Show right ellipsis if there are hidden dots
+			if (end < total - 2) {
+				result.push({ type: 'ellipsis' })
+			} else if (end === total - 2) {
+				// Show the second-to-last dot instead of ellipsis to maintain count
+				result.push({ type: 'dot', index: total - 2, item: items[total - 2] })
+			}
+		} else {
+			// Show all middle dots
+			for (let i = 1; i < total - 1; i++) {
+				result.push({ type: 'dot', index: i, item: items[i] })
+			}
 		}
 
-		for (let i = start; i <= end; i++) {
-			result.push({ type: 'dot', index: i, item: items[i] })
-		}
-
-		if (end < total - 2) {
-			result.push({ type: 'ellipsis' })
-		}
-
+		// Always show last dot
 		if (total > 1) {
 			result.push({ type: 'dot', index: total - 1, item: items[total - 1] })
 		}
@@ -76,7 +108,7 @@
 </script>
 
 {#if items.length > 1 || showArrows}
-	<a class="controls" {href} aria-label={ariaLabel}>
+	<nav class="controls" aria-label={ariaLabel}>
 		{#if showArrows}
 			<button class="nav" type="button" aria-label={previousLabel} on:click={previous}>
 				&lsaquo;
@@ -107,7 +139,7 @@
 		{#if showArrows}
 			<button class="nav" type="button" aria-label={nextLabel} on:click={next}> &rsaquo; </button>
 		{/if}
-	</a>
+	</nav>
 {/if}
 
 <style>

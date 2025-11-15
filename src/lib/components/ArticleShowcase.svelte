@@ -2,47 +2,49 @@
 	import { onMount } from 'svelte'
 	import CarouselNavigation from '$components/CarouselNavigation.svelte'
 	import ArticleTeaserCard from '$components/ArticleTeaserCard.svelte'
+	import type { ArticleShowcaseItem } from '$lib/types'
 
 	const ALL_CATEGORY = 'Toutes'
-	const MOBILE_BREAKPOINT = 768
 
-	interface ArticleItem {
-		category: string
-		image: string
-		date: string
-		title: string
-		summary: string
-		url: string
-	}
-
-	export let articles: ArticleItem[] = []
+	export let articles: ArticleShowcaseItem[] = []
 
 	let activeCategory: string = ALL_CATEGORY
 	let currentPage = 0
 	let categories: string[] = []
 	let tabs: string[] = []
-	let filteredArticles: ArticleItem[] = []
+	let filteredArticles: ArticleShowcaseItem[] = []
 	let totalPages = 1
-	let pageArticles: ArticleItem[] = []
+	let pageArticles: ArticleShowcaseItem[] = []
 	let navItems: { label: string }[] = []
 	let itemsPerPage = 6
 
-	const updateItemsPerPage = () => {
-		const wasMobile = itemsPerPage === 4
-		itemsPerPage = window.innerWidth < MOBILE_BREAKPOINT ? 4 : 6
+	// Read page size from CSS custom property
+	function getPageSize(): number {
+		if (typeof window === 'undefined') return 6
+		const value = getComputedStyle(document.documentElement).getPropertyValue(
+			'--articles-page-size'
+		)
+		return parseInt(value, 10) || 6
+	}
 
-		// Reset to first page if switching between mobile/desktop
-		if (wasMobile !== (itemsPerPage === 4)) {
-			currentPage = 0
+	function updatePageSize() {
+		const newSize = getPageSize()
+		if (newSize !== itemsPerPage) {
+			// Keep the first visible item stable when size changes
+			const firstIndex = currentPage * itemsPerPage
+			currentPage = Math.floor(firstIndex / newSize)
+			itemsPerPage = newSize
 		}
 	}
 
 	onMount(() => {
-		updateItemsPerPage()
-		window.addEventListener('resize', updateItemsPerPage)
+		updatePageSize()
+
+		const mediaQuery = window.matchMedia('(min-width: 768px)')
+		mediaQuery.addEventListener('change', updatePageSize)
 
 		return () => {
-			window.removeEventListener('resize', updateItemsPerPage)
+			mediaQuery.removeEventListener('change', updatePageSize)
 		}
 	})
 
@@ -72,7 +74,11 @@
 		currentPage = 0
 	}
 
-	$: categories = Array.from(new Set<string>(articles.map((article) => article.category)))
+	$: categories = Array.from(
+		new Set<string>(
+			articles.map((article) => article.category).filter((cat): cat is string => !!cat)
+		)
+	)
 	$: tabs = [ALL_CATEGORY, ...categories]
 	$: filteredArticles =
 		activeCategory === ALL_CATEGORY
@@ -143,11 +149,20 @@
 		on:previous={previousPage}
 		on:next={nextPage}
 		on:select={handleSelect}
-		href="#showcase"
 	/>
 </section>
 
 <style>
+	:root {
+		--articles-page-size: 4;
+	}
+
+	@media (min-width: 768px) {
+		:root {
+			--articles-page-size: 6;
+		}
+	}
+
 	#showcase {
 		margin: 3rem 0 5rem;
 		padding-top: 2rem;
@@ -175,7 +190,7 @@
 	button[role='tab'] {
 		border-radius: 999px;
 		border: 1px solid var(--carousel-border, #d9c7b0);
-		background: #ffffff;
+		background: var(--white);
 		padding: 0.5rem 1.3rem;
 		color: var(--carousel-text, #414042);
 		cursor: pointer;
@@ -188,15 +203,15 @@
 
 	button[role='tab']:hover,
 	button[role='tab']:focus-visible {
-		border-color: var(--carousel-accent, #ff9416);
+		border-color: var(--carousel-accent, var(--brand));
 		outline: none;
 		transform: translateY(-2px);
 	}
 
 	button[role='tab'].tab--active {
-		background: var(--carousel-accent, #ff9416);
-		color: #ffffff;
-		border-color: var(--carousel-accent, #ff9416);
+		background: var(--carousel-accent, var(--brand));
+		color: var(--white);
+		border-color: var(--carousel-accent, var(--brand));
 	}
 
 	.grid {
@@ -208,7 +223,7 @@
 	.empty {
 		margin: 0;
 		text-align: center;
-		color: #6b6b6b;
+		color: var(--text-secondary);
 		font-size: 0.95rem;
 	}
 

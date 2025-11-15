@@ -1,13 +1,7 @@
 <script lang="ts">
 	import CarouselNavigation from '$components/CarouselNavigation.svelte'
-
-	interface Testimonial {
-		name: string | null
-		age: number | null
-		job: string
-		date: string
-		testimony: string
-	}
+	import { formatFrenchDate } from '$lib/utils'
+	import type { Testimonial } from '$lib/types'
 
 	export let testimonials: Testimonial[] = []
 
@@ -30,16 +24,6 @@
 		goTo(current + 1)
 	}
 
-	const formatDate = (value: string) => {
-		const parsed = new Date(value)
-
-		if (Number.isNaN(parsed.getTime())) {
-			return value
-		}
-
-		return new Intl.DateTimeFormat('fr-FR').format(parsed)
-	}
-
 	let currentTestimonial: Testimonial | null = null
 	let formattedDate = ''
 
@@ -56,7 +40,7 @@
 			const inBounds = current >= 0 && current < testimonials.length
 			const item = inBounds ? testimonials[current] : null
 			currentTestimonial = item
-			formattedDate = item ? formatDate(item.date) : ''
+			formattedDate = item?.date ? formatFrenchDate(item.date) : ''
 		} else {
 			currentTestimonial = null
 			formattedDate = ''
@@ -114,9 +98,9 @@
 	}
 
 	.slide {
-		background: #ffffff;
+		background: var(--white);
 		border-radius: 18px;
-		border: 1px solid #e4d5c3;
+		border: 1px solid var(--carousel-border, #d9c7b0);
 		padding: 2rem 2.4rem;
 		min-height: 220px;
 		display: flex;
@@ -146,7 +130,7 @@
 	.date {
 		margin: 0.35rem 0 0;
 		font-size: 0.92rem;
-		color: #6b6b6b;
+		color: var(--text-secondary);
 	}
 
 	.testimony {
